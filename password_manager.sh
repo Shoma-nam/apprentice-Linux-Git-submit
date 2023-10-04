@@ -1,6 +1,7 @@
 #!/bin/bash
 
 password_file="passwords.txt"
+encrypted_file="passwords.txt.gpg"
 
 while true; do
     echo "パスワードマネージャーへようこそ！"
@@ -15,12 +16,22 @@ while true; do
         echo "パスワードを入力してください："
         read password
 
+        # 復号化
+        gpg --output $password_file --decrypt $encrypted_file 2>/dev/null
+
         echo "$service:$username:$password" >> $password_file
         echo "パスワードの追加は成功しました。"
+
+        # 暗号化
+        gpg --yes --batch --passphrase="YOUR_PASSPHRASE" -c $password_file
+        rm $password_file
 
     elif [ "$choice" == "Get Password" ]; then
         echo "サービス名を入力してください："
         read service
+
+        # 復号化して一時ファイルに保存
+        gpg --output $password_file --decrypt $encrypted_file 2>/dev/null
 
         found=0
         while IFS= read -r line; do
@@ -39,6 +50,8 @@ while true; do
         if [ "$found" -eq 0 ]; then
             echo "そのサービスは登録されていません。"
         fi
+
+        rm $password_file
 
     elif [ "$choice" == "Exit" ]; then
         echo "Thank you!"
